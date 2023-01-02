@@ -1,0 +1,53 @@
+﻿@page "/"
+@inject IFileUpload  fileUpload
+@inject IWebHostEnvironment Env
+
+<h3>Upload de Arquivo : Selecione o arquivo</h3>
+
+<hr />
+<InputFile OnChange="HandleFileSelected" />
+<hr />
+
+@if (arquivo != null)
+{
+    <p>Tamanho em bytes: @arquivo.Size</p>
+    <p>Data última modificação: @arquivo.LastModified.ToShortDateString()</p>
+    <p>Conteúdo : @arquivo.Type</p>
+}
+
+<Aviso Exibir="Exibir">
+    <h4>@Mensagem</h4>
+</Aviso>
+
+@code {
+    IFileListEntry arquivo;
+    bool Exibir = false;
+
+    [Parameter]
+    public string Mensagem { get; set; }
+
+    async Task HandleFileSelected(IFileListEntry[] files)
+    {
+        Exibir = true;
+        try
+        {
+            arquivo = files.FirstOrDefault();
+            if (arquivo != null)
+            {
+                await fileUpload.UploadAsync(arquivo);
+            }
+            Mensagem = "Arquivo(s) enviado(s) com Sucesso...";
+        }
+        catch (Exception ex)
+        {
+            if (Env.IsDevelopment())
+            {
+                Mensagem = "Erro ao enviar arquivo(s) ...\n" + ex.StackTrace.ToString();
+            }
+            else
+            {
+                Mensagem = "Não foi possível enviar o(s) arquivo(s) ..." + ex.InnerException.ToString();
+            }
+        }
+    }
+}
